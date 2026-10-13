@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     embedding_model: str = ""
     embedding_api_key: str = ""
+    rag_min_score: float = 0.65
+    seed_password: str = ""
 
     @field_validator("database_url")
     @classmethod

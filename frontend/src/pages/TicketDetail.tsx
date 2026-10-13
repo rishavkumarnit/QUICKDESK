@@ -12,6 +12,7 @@ import {
   badge,
   ErrorMessage,
   Loading,
+  ui,
   type User,
   type Ticket,
 } from "../shared";
@@ -71,7 +72,7 @@ export default function TicketDetail({ user }: { user: User }) {
   if (!t)
     return (
       <>
-        <Link className="back" to="/tickets">
+        <Link className={ui.back} to="/tickets">
           ← Tickets
         </Link>
         <ErrorMessage error={ticket.error} />
@@ -82,54 +83,68 @@ export default function TicketDetail({ user }: { user: User }) {
   const open = t.status === "Open";
   return (
     <>
-      <Link className="back" to="/tickets">
+      <Link className={ui.back} to="/tickets">
         ← Back to tickets
       </Link>
-      <div className="page-heading">
+      <div className={ui.pageHeading}>
         <div>
-          <span className="eyebrow">REQUEST #{t.id.slice(0, 8)}</span>
-          <h1 className="detail-title">{t.title}</h1>
-          <p className="muted">
+          <span className={ui.eyebrow}>REQUEST #{t.id.slice(0, 8)}</span>
+          <h1 className="mb-3 max-w-[780px] break-words text-[25px] leading-[1.2] font-semibold tracking-[-1px] min-[801px]:text-[29px]">
+            {t.title}
+          </h1>
+          <p className={ui.muted}>
             Opened {date(t.created_at)} by {t.employee.name}
           </p>
         </div>
         {badge(t.status)}
       </div>
       {notice && (
-        <div role="status" className="success">
+        <div
+          role="status"
+          className="my-3.5 break-words rounded-md bg-[#eaf5ee] px-4 py-3 text-xs leading-relaxed text-[#32694b]"
+        >
           {notice}
         </div>
       )}
-      <div className="detail-grid">
-        <div className="detail-main">
-          <section className="panel section">
-            <h2>Original request</h2>
-            <p className="prose">{t.description}</p>
+      <div className="grid grid-cols-1 gap-6 min-[801px]:grid-cols-[minmax(0,1fr)_260px] min-[1101px]:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="flex min-w-0 flex-col gap-[22px]">
+          <section className={`${ui.panel} p-6`}>
+            <h2 className={ui.sectionHeading}>Original request</h2>
+            <p className={ui.prose}>{t.description}</p>
             {t.attachment && (
-              <div className="attachment">
+              <div className="break-words rounded-[5px] bg-[#f6f8fa] p-3 text-[11px] text-[#768997]">
                 Attachment filename: {t.attachment}
               </div>
             )}
           </section>
           {t.final_reply && (
-            <section className="panel section">
-              <div className="section-heading">
-                <h2>Support reply</h2>
+            <section className={`${ui.panel} p-6`}>
+              <div className="mb-[18px] flex items-center justify-between gap-3">
+                <h2 className="text-[17px] font-semibold tracking-[-0.3px]">
+                  Support reply
+                </h2>
                 {badge("Resolved")}
               </div>
-              <p className="prose">{t.final_reply}</p>
-              <small className="muted">Sent {date(t.resolved_at!)}</small>
+              <p className={ui.prose}>{t.final_reply}</p>
+              <small className="text-xs text-[#75818c]">
+                Sent {date(t.resolved_at!)}
+              </small>
             </section>
           )}
           {isAgent && (
-            <section className="panel section ai-panel">
-              <div className="section-heading">
+            <section className={`${ui.panel} border-[#d4e4dc] p-6`}>
+              <div className="mb-[18px] flex items-center justify-between gap-3">
                 <div>
-                  <span className="eyebrow">✧ KNOWLEDGE-BASE ASSIST</span>
-                  <h2>AI reply draft</h2>
+                  <span className={`${ui.eyebrow} text-[9px]`}>
+                    ✧ KNOWLEDGE-BASE ASSIST
+                  </span>
+                  <h2 className="text-[17px] font-semibold tracking-[-0.3px]">
+                    AI reply draft
+                  </h2>
                 </div>
                 {open && (
                   <button
+                    className={ui.button}
                     onClick={() => draft.mutate()}
                     disabled={draft.isPending}
                   >
@@ -144,20 +159,25 @@ export default function TicketDetail({ user }: { user: User }) {
               <ErrorMessage error={draft.error} />
               {latest ? (
                 <>
-                  <p className="prose">{latest.body}</p>
-                  <div className="sources">
+                  <p className={ui.prose}>{latest.body}</p>
+                  <div className="my-5 border-t border-[#e8eeeb] pt-3.5 text-[11px] text-[#607e6e]">
                     <strong>Sources · {latest.citations.length}</strong>
                     {latest.citations.map((c) => (
-                      <details key={c.source}>
-                        <summary>{c.title}</summary>
-                        <p className="prose">{c.excerpt}</p>
+                      <details
+                        className="mt-3 rounded-md bg-[#f7faf8] p-3"
+                        key={c.source}
+                      >
+                        <summary className="font-medium">{c.title}</summary>
+                        <p className={`${ui.prose} mt-3 text-xs`}>
+                          {c.excerpt}
+                        </p>
                         <small>{c.source}</small>
                       </details>
                     ))}
                   </div>
                   {open && (
                     <button
-                      className="secondary"
+                      className={ui.secondary}
                       onClick={() => {
                         if (
                           !reply.trim() ||
@@ -177,18 +197,23 @@ export default function TicketDetail({ user }: { user: User }) {
                   )}
                 </>
               ) : (
-                <p className="muted">
+                <p className={ui.muted}>
                   Generate a suggested reply grounded in the company knowledge
                   base. You stay in control of what gets sent.
                 </p>
               )}
               {(t.drafts?.length ?? 0) > 1 && (
-                <details className="history">
-                  <summary>Earlier drafts ({t.drafts!.length - 1})</summary>
+                <details className="mt-5 text-xs text-[#708277]">
+                  <summary className="font-medium">
+                    Earlier drafts ({t.drafts!.length - 1})
+                  </summary>
                   {t.drafts!.slice(1).map((d) => (
-                    <div key={d.id}>
+                    <div
+                      className="mt-4 border-t border-[#e1eae5] pt-4"
+                      key={d.id}
+                    >
                       <small>{date(d.created_at)}</small>
-                      <p className="prose">{d.body}</p>
+                      <p className={ui.prose}>{d.body}</p>
                       <small>
                         Sources:{" "}
                         {d.citations.map((c) => c.title).join(", ") || "None"}
@@ -201,14 +226,14 @@ export default function TicketDetail({ user }: { user: User }) {
           )}
           {isAgent && open && (
             <form
-              className="panel section"
+              className={`${ui.panel} p-6`}
               onSubmit={(e) => {
                 e.preventDefault();
                 send.mutate();
               }}
             >
-              <h2>Your reply</h2>
-              <p className="muted">
+              <h2 className={ui.sectionHeading}>Your reply</h2>
+              <p className={ui.muted}>
                 Review the draft or write your own. Sending a reply resolves the
                 ticket.
               </p>
@@ -216,6 +241,7 @@ export default function TicketDetail({ user }: { user: User }) {
                 Reply to employee
               </label>
               <textarea
+                className={`${ui.field} mt-0 resize-y leading-[1.7]`}
                 id="reply"
                 rows={8}
                 value={reply}
@@ -225,12 +251,12 @@ export default function TicketDetail({ user }: { user: User }) {
                 placeholder="Write a helpful reply…"
               />
               <ErrorMessage error={send.error} />
-              <div className="form-actions">
-                <small className="muted">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <small className="text-xs text-[#75818c]">
                   The original AI draft is kept for comparison.
                 </small>
                 <button
-                  className="primary"
+                  className={ui.primary}
                   disabled={send.isPending || !reply.trim()}
                 >
                   {send.isPending ? "Sending…" : "Send reply & resolve →"}
@@ -239,25 +265,33 @@ export default function TicketDetail({ user }: { user: User }) {
             </form>
           )}
         </div>
-        <aside className="detail-aside">
-          <section className="panel section">
-            <h2>Ticket details</h2>
-            <div className="requester">
-              <div className="avatar">{t.employee.name[0]}</div>
+        <aside className="order-first flex min-w-0 flex-col gap-[22px] min-[801px]:order-none">
+          <section className={`${ui.panel} p-5 min-[801px]:p-6`}>
+            <h2 className={ui.sectionHeading}>Ticket details</h2>
+            <div className="my-3 flex gap-2.5 min-[801px]:mt-5 min-[801px]:mb-[26px]">
+              <div className="flex h-[35px] w-[35px] shrink-0 items-center justify-center rounded-full bg-[#e6edea] text-[11px] font-bold text-[#466458]">
+                {t.employee.name[0]}
+              </div>
               <div>
-                <strong>{t.employee.name}</strong>
-                <small>{t.employee.email}</small>
+                <strong className="block text-xs">{t.employee.name}</strong>
+                <small className="mt-[3px] block break-words text-[10px] text-[#88939a]">
+                  {t.employee.email}
+                </small>
               </div>
             </div>
             <form
+              className="flex flex-wrap gap-3 min-[801px]:block"
               onSubmit={(e) => {
                 e.preventDefault();
                 override.mutate();
               }}
             >
-              <label>
+              <label
+                className={`${ui.label} min-w-[110px] flex-1 min-[801px]:mb-[22px]`}
+              >
                 Category
                 <select
+                  className={ui.field}
                   disabled={!isAgent || !open}
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -265,9 +299,12 @@ export default function TicketDetail({ user }: { user: User }) {
                   {options(categories)}
                 </select>
               </label>
-              <label>
+              <label
+                className={`${ui.label} min-w-[110px] flex-1 min-[801px]:mb-[22px]`}
+              >
                 Priority
                 <select
+                  className={ui.field}
                   disabled={!isAgent || !open}
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
@@ -275,14 +312,14 @@ export default function TicketDetail({ user }: { user: User }) {
                   {options(priorities)}
                 </select>
               </label>
-              <div className="ai-note">
+              <div className="my-4 w-full rounded-md bg-[#f1f7f4] p-3.5 text-[11px] leading-[1.7] text-[#587e6d]">
                 {t.classification_status === "complete" ? (
                   <>
                     ✧ AI suggested <strong>{t.ai_category}</strong> /{" "}
                     <strong>{t.ai_priority}</strong>
                     {(t.category !== t.ai_category ||
                       t.priority !== t.ai_priority) && (
-                      <p>Adjusted by an agent.</p>
+                      <p className="mt-1 mb-0">Adjusted by an agent.</p>
                     )}
                   </>
                 ) : (
@@ -291,7 +328,7 @@ export default function TicketDetail({ user }: { user: User }) {
               </div>
               {isAgent && open && (
                 <button
-                  className="secondary full"
+                  className={`${ui.secondary} w-full`}
                   disabled={
                     override.isPending ||
                     (category === t.category && priority === t.priority)
@@ -304,22 +341,27 @@ export default function TicketDetail({ user }: { user: User }) {
             </form>
           </section>
           {isAgent && (
-            <section className="panel section">
-              <h2>Override history</h2>
+            <section className={`${ui.panel} p-5 min-[801px]:p-6`}>
+              <h2 className={ui.sectionHeading}>Override history</h2>
               {t.audit?.length ? (
-                <ol className="audit">
+                <ol className="m-0 list-none p-0">
                   {t.audit.map((a, i) => (
-                    <li key={i}>
-                      <strong>{a.actor}</strong>
-                      <p>
+                    <li
+                      className="border-l-2 border-[#e1eae5] pb-5 pl-[15px]"
+                      key={i}
+                    >
+                      <strong className="text-[11px]">{a.actor}</strong>
+                      <p className="my-1.5 text-[11px]">
                         {a.field}: {a.old_value} → {a.new_value}
                       </p>
-                      <small>{date(a.created_at)}</small>
+                      <small className="text-[10px] text-[#96a1a8]">
+                        {date(a.created_at)}
+                      </small>
                     </li>
                   ))}
                 </ol>
               ) : (
-                <p className="muted">
+                <p className={ui.muted}>
                   No changes yet. Category and priority overrides are recorded
                   here.
                 </p>

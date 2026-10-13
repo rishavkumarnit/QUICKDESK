@@ -1,9 +1,11 @@
-# Knowledge base
+# Demo knowledge base
 
-Add 5–10 Markdown articles (100–300 words each) here during RAG implementation.
-The ingestion command will exclude this README, split articles, generate
-embeddings, and upsert chunks with source metadata into MongoDB Atlas.
+The six 100–300 word articles in this directory are fictional assessment data.
+Run `python -m app.ingest` from `backend` to split them into 1200-character
+chunks with 200-character overlap and embed them into the configured Atlas
+collection. This README is excluded. Source filenames and titles are stored
+with each chunk for citations. The command reuses unchanged chunk embeddings.
 
-Use the same embedding model for ingestion and queries. Configure the Atlas
-Vector Search index dimensions to match the selected embedding model.
-Ingestion and index creation are not implemented in this initial setup.
+Changing the embedding model requires matching the vector index dimensions
+and re-ingesting the source documents. The configured model is also a query
+filter, preventing retrieval from a different embedding model's records.

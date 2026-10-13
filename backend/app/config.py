@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,6 +27,15 @@ class Settings(BaseSettings):
     embedding_api_key: str = ""
     rag_min_score: float = 0.65
     seed_password: str = ""
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        origins = [self.frontend_origin]
+        url = urlsplit(self.frontend_origin)
+        if self.app_env == 'development' and url.hostname in ('localhost', '127.0.0.1'):
+            alternate = '127.0.0.1' if url.hostname == 'localhost' else 'localhost'
+            origins.append(f'{url.scheme}://{alternate}' + (f':{url.port}' if url.port else ''))
+        return origins
 
     @field_validator("database_url")
     @classmethod

@@ -1,5 +1,6 @@
 """Opt-in live demo: creates one resolved sample ticket using configured services."""
 import httpx
+from contextlib import closing
 from app.config import settings
 
 def login(email):
@@ -10,7 +11,7 @@ def login(email):
     return client
 
 def main():
-    with login('employee@quickdesk.test') as employee, login('agent@quickdesk.test') as agent:
+    with closing(login('employee@quickdesk.test')) as employee, closing(login('agent@quickdesk.test')) as agent:
         result = employee.post('/tickets', json={'title':'Demo: VPN stopped after password reset',
             'description':'I changed my company password this morning. Normal internet works but the company VPN now rejects my login. How can I reconnect?',
             'attachment':'vpn-error-example.png'})

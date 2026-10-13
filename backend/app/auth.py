@@ -18,7 +18,7 @@ COOKIE = 'quickdesk_session'
 
 def origin_check(request: Request):
     origin = request.headers.get('origin')
-    if origin and origin != settings.frontend_origin:
+    if origin and origin not in settings.allowed_origins:
         raise HTTPException(403, 'Untrusted origin')
 
 def decode(request: Request):

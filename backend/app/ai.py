@@ -1,8 +1,7 @@
-"""LLM classification and LangChain retrieval with validated source citations."""
+"""LLM classification and retrieval with validated source citations."""
 import json
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_mongodb import MongoDBAtlasVectorSearch
-from pymongo import MongoClient
+from langchain_openai import ChatOpenAI
+from app.knowledge import get_vector_store
 from app.config import settings
 from app.schemas import Classification, GroundedReply
 
@@ -12,18 +11,6 @@ def llm():
     if settings.llm_model.startswith('gpt-5'):
         options['reasoning_effort'] = 'low'
     return ChatOpenAI(**options)
-
-def embeddings():
-    return OpenAIEmbeddings(model=settings.embedding_model, api_key=settings.embedding_api_key,
-                            request_timeout=30, max_retries=1)
-
-def vector_store(client):
-    return MongoDBAtlasVectorSearch(
-        collection=client[settings.mongodb_database][settings.mongodb_collection],
-        embedding=embeddings(), index_name=settings.mongodb_vector_index,
-        relevance_score_fn='cosine', text_key='text', embedding_key='embedding',
-        auto_create_index=False,
-    )
 
 def classify(title: str, description: str) -> Classification:
     chain = llm().with_structured_output(Classification, method='json_schema', strict=True)
@@ -38,11 +25,9 @@ def classify(title: str, description: str) -> Classification:
 NO_GUIDANCE = 'No relevant knowledge-base guidance was found. Please review this request and provide a manual reply or consult the appropriate team.'
 
 def draft_reply(title: str, description: str):
-    with MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=10000, socketTimeoutMS=30000) as client:
-        results = vector_store(client).similarity_search_with_score(
-            title + '\n' + description, k=3,
-            pre_filter={'embedding_model': {'$eq': settings.embedding_model}},
-        )
+    results = get_vector_store().similarity_search_with_score(
+        title + '\n' + description, k=3,
+    )
     relevant = [(doc, score) for doc, score in results if score >= settings.rag_min_score]
     if not relevant:
         return NO_GUIDANCE, []

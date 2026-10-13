@@ -8,7 +8,6 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 
 import httpx
-from pymongo import MongoClient
 from sqlalchemy import create_engine, text
 
 from app.config import settings
@@ -24,17 +23,6 @@ def postgres() -> str:
         return "OK"
     finally:
         engine.dispose()
-
-
-def mongodb() -> str:
-    if not settings.mongodb_uri:
-        return "MISSING: MONGODB_URI"
-    with MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=10000,
-                     connectTimeoutMS=10000, socketTimeoutMS=10000) as client:
-        client.admin.command("ping")
-        # Verify access to the configured collection without inserting data.
-        client[settings.mongodb_database][settings.mongodb_collection].find_one({}, {"_id": 1})
-    return "OK (connection and collection read access)"
 
 
 def openai_request(path: str, key: str, payload: dict) -> dict:
@@ -91,7 +79,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--openai", action="store_true")
     args = parser.parse_args()
-    checks = [("PostgreSQL", postgres), ("MongoDB", mongodb)]
+    checks = [("PostgreSQL", postgres)]
     if args.openai:
         checks += [("OpenAI generation", generation), ("OpenAI embeddings", embeddings)]
     with ThreadPoolExecutor(max_workers=4) as pool:

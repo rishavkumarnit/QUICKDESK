@@ -16,16 +16,12 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:5173"
     database_url: str = ""
     jwt_secret: str = ""
-    mongodb_uri: str = ""
-    mongodb_database: str = "quickdesk"
-    mongodb_collection: str = "knowledge_chunks"
-    mongodb_vector_index: str = "knowledge_vector_index"
     llm_provider: str = ""
     llm_model: str = ""
     llm_api_key: str = ""
     embedding_model: str = ""
     embedding_api_key: str = ""
-    rag_min_score: float = 0.65
+    rag_min_score: float = 0.35
     seed_password: str = ""
 
     @property

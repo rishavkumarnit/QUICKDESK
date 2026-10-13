@@ -1,6 +1,7 @@
 import os
 os.environ['DATABASE_URL'] = 'sqlite://'
 os.environ['JWT_SECRET'] = 'test-only-secret-that-is-longer-than-32-characters'
+os.environ['APP_ENV'] = 'test'
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -15,8 +16,10 @@ from app.models import User, Draft, Ticket, LoginSession, now
 from app.auth import hasher, COOKIE
 from app.schemas import Classification, GroundedReply
 from app import ai
+from app import knowledge
 from app.events import event_batch
 from langchain_core.documents import Document
+from langchain_core.embeddings import DeterministicFakeEmbedding
 
 class CoreTests(unittest.TestCase):
     def setUp(self):
@@ -131,15 +134,30 @@ class CoreTests(unittest.TestCase):
             self.assertIsNone(event_batch('agent','agent','revoked',0))
 
 class RagTests(unittest.TestCase):
+    def test_markdown_articles_are_loaded_for_startup_ingestion(self):
+        documents = knowledge.load_documents()
+        self.assertGreaterEqual(len(documents), 5)
+        self.assertTrue(all(doc.metadata['source'].endswith('.md') for doc in documents))
+        self.assertNotIn('README.md', {doc.metadata['source'] for doc in documents})
+
+    def test_in_memory_index_is_built_from_articles(self):
+        with patch('app.knowledge._embeddings', return_value=DeterministicFakeEmbedding(size=32)):
+            count = knowledge.initialize_knowledge_base()
+        self.assertEqual(count, len(knowledge.load_documents()))
+        self.assertEqual(knowledge.knowledge_status(), {'ready': True, 'chunks': count})
+        results = knowledge.get_vector_store().similarity_search_with_score('VPN access', k=3)
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(result.metadata['source'].endswith('.md') for result, _ in results))
+
     def test_no_relevant_context_does_not_generate(self):
-        with patch('app.ai.MongoClient'), patch('app.ai.vector_store') as store, patch('app.ai.llm') as model:
+        with patch('app.ai.get_vector_store') as store, patch('app.ai.llm') as model:
             store.return_value.similarity_search_with_score.return_value = []
             self.assertEqual(ai.draft_reply('Unknown', 'Unrelated question'), (ai.NO_GUIDANCE, []))
             model.assert_not_called()
 
     def test_citations_must_be_retrieved(self):
         doc = Document(page_content='Sign in again', metadata={'source':'vpn.md','title':'VPN'})
-        with patch('app.ai.MongoClient'), patch('app.ai.vector_store') as store, patch('app.ai.llm') as model:
+        with patch('app.ai.get_vector_store') as store, patch('app.ai.llm') as model:
             store.return_value.similarity_search_with_score.return_value = [(doc,.9)]
             model.return_value.with_structured_output.return_value.invoke.return_value = GroundedReply(supported=True,reply='Advice',sources=['invented.md'])
             with self.assertRaises(ValueError): ai.draft_reply('VPN', 'VPN issue')

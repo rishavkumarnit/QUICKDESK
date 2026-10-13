@@ -56,7 +56,9 @@ def draft_reply(title: str, description: str):
          'Do not invent policies, links, contacts, procedures, or approvals. '
          'Return supported=false, an empty sources list, and no advice if the articles do not '
          'answer the request. Otherwise list the exact source filenames used. '
-         'Do not claim to have taken actions. The agent must review before sending.'),
+         'Do not claim to have taken actions. This app resolves a ticket when the agent sends a reply. '
+         'If more help is needed, the employee opens a new support request; do not tell them '
+         'to reply to the resolved ticket. The agent must review before sending.'),
         ('human', json.dumps({'ticket': {'title': title, 'description': description},
                              'articles': list(sources.values())})),
     ])

@@ -29,8 +29,6 @@ Skip the copy if your `.env` already exists. Configure:
 
 Environment files, virtual environments, build output, and local credentials are ignored by Git. Never put API keys in frontend variables.
 
-For **local PostgreSQL instead of Neon**, copy the root `.env.example` to `.env`, set `POSTGRES_PASSWORD`, and use the same password in `DATABASE_URL` (URL-encode special characters). Start Docker Desktop, then run `docker compose up -d postgres`. Docker is not required with Neon. Compose provides only PostgreSQL, not the whole application.
-
 Initialize the application and knowledge base:
 
 ```powershell

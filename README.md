@@ -6,6 +6,8 @@ QuickDesk is an internal helpdesk where employees submit requests and support ag
 
 Requirements: Python 3.11+ (tested on 3.13), Node.js 22.12+ or compatible newer release (tested on 26), a PostgreSQL database, and an OpenAI API key with model access and quota. Commands below use PowerShell from the repository root.
 
+> **AI provider support:** This implementation supports **OpenAI only** for both chat generation and embeddings. `LLM_PROVIDER` must remain `openai`. Changing that environment value does not enable Gemini, Anthropic, Ollama, or another provider; supporting one would require a provider adapter and its LangChain integration.
+
 ```powershell
 python -m venv backend/.venv
 backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.lock.txt
@@ -33,10 +35,11 @@ Keep this value stable between backend restarts. Replacing `JWT_SECRET` invalida
 | `DATABASE_URL` | Neon connection URL, retaining TLS parameters; `postgresql://` is accepted and mapped to psycopg |
 | `JWT_SECRET` | Stable server-side key used to sign authentication tokens; generate it using the command above |
 | `SEED_PASSWORD` | At least 12 characters for the three sample users; choose a unique local demo password |
-| `LLM_PROVIDER` / `LLM_MODEL` | `openai` / `gpt-5-mini` |
-| `LLM_API_KEY` | OpenAI generation key |
-| `EMBEDDING_MODEL` | `text-embedding-3-small` |
-| `EMBEDDING_API_KEY` | OpenAI embeddings key; may be the same as `LLM_API_KEY` |
+| `LLM_PROVIDER` | Must be `openai`; other providers are not implemented |
+| `LLM_MODEL` | OpenAI chat model with structured-output support; default setup uses `gpt-5-mini` |
+| `LLM_API_KEY` | OpenAI API key used for classification and reply generation |
+| `EMBEDDING_MODEL` | OpenAI embedding model; default setup uses `text-embedding-3-small` |
+| `EMBEDDING_API_KEY` | OpenAI API key used for embeddings; it may be the same as `LLM_API_KEY` |
 | `RAG_MIN_SCORE` | Optional cosine-similarity threshold for retrieved chunks; default `0.35` |
 | `FRONTEND_ORIGIN` | `http://localhost:5173`; the same-port `127.0.0.1` alias is also accepted in development |
 | `APP_ENV` | `development`; `production` enables Secure session cookies |

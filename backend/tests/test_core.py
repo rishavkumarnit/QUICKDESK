@@ -6,6 +6,7 @@ os.environ['APP_ENV'] = 'test'
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import timedelta
+from pydantic import ValidationError
 from sqlalchemy import create_engine, select
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
@@ -36,7 +37,10 @@ class CoreTests(unittest.TestCase):
         self.agent = self.login('agent')
         self.employee = self.login('employee')
         self.other = self.login('other')
-        self.classifier = patch('app.ai.classify', return_value=Classification(category='IT', priority='Medium'))
+        self.classifier = patch(
+            'app.ai.classify',
+            return_value=Classification(category='IT', priority='Medium', confidence=0.84),
+        )
         self.classifier.start()
 
     def login(self, name):
@@ -86,6 +90,7 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(self.agent.post('/api/tickets/'+identity+'/drafts').status_code, 201)
         result = self.agent.patch('/api/tickets/'+identity, json={'category':'HR','priority':'High'}).json()
         self.assertEqual(result['ai_category'], 'IT')
+        self.assertEqual(result['ai_confidence'], 0.84)
         self.assertEqual(len(result['audit']), 2)
         self.assertEqual(result['audit'][0]['actor'], 'agent')
         self.agent.patch('/api/tickets/'+identity, json={'category':'HR','priority':'High'})
@@ -118,6 +123,7 @@ class CoreTests(unittest.TestCase):
         result = self.agent.get('/api/tickets/'+identity).json()
         self.assertEqual(result['classification_status'], 'failed')
         self.assertIsNone(result['ai_category'])
+        self.assertIsNone(result['ai_confidence'])
         with patch('app.ai.draft_reply', side_effect=TimeoutError()):
             self.assertEqual(self.agent.post('/api/tickets/'+identity+'/drafts').status_code, 503)
         self.assertEqual(self.agent.post('/api/tickets/'+identity+'/reply', json={'body':'Manual help'}).status_code, 200)
@@ -134,6 +140,14 @@ class CoreTests(unittest.TestCase):
             self.assertIsNone(event_batch('agent','agent','revoked',0))
 
 class RagTests(unittest.TestCase):
+    def test_classification_confidence_is_bounded(self):
+        self.assertEqual(
+            Classification(category='IT', priority='High', confidence=0.9).confidence,
+            0.9,
+        )
+        with self.assertRaises(ValidationError):
+            Classification(category='IT', priority='High', confidence=1.1)
+
     def test_markdown_articles_are_loaded_for_startup_ingestion(self):
         documents = knowledge.load_documents()
         self.assertGreaterEqual(len(documents), 5)

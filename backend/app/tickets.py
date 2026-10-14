@@ -27,7 +27,7 @@ def event(db, ticket, kind):
 def summary(ticket):
     return {key: getattr(ticket, key) for key in (
         'id', 'title', 'status', 'category', 'priority', 'created_at', 'resolved_at',
-        'ai_category', 'ai_priority', 'classification_status')}
+        'ai_category', 'ai_priority', 'ai_confidence', 'classification_status')}
 
 def detail(db, ticket, user):
     result = summary(ticket) | {'description': ticket.description,
@@ -70,6 +70,7 @@ def create_ticket(data: CreateTicket, user: User = Depends(current_user), db: Se
         suggestion = ai.classify(data.title, data.description)
         ticket.ai_category = ticket.category = suggestion.category
         ticket.ai_priority = ticket.priority = suggestion.priority
+        ticket.ai_confidence = suggestion.confidence
         ticket.classification_status = 'complete'
     except Exception:
         ticket.category, ticket.priority = 'Other', 'Medium'

@@ -315,8 +315,37 @@ export default function TicketDetail({ user }: { user: User }) {
               <div className="my-4 w-full rounded-md bg-[#f1f7f4] p-3.5 text-[11px] leading-[1.7] text-[#587e6d]">
                 {t.classification_status === "complete" ? (
                   <>
-                    ✧ AI suggested <strong>{t.ai_category}</strong> /{" "}
-                    <strong>{t.ai_priority}</strong>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        ✧ AI suggested <strong>{t.ai_category}</strong> /{" "}
+                        <strong>{t.ai_priority}</strong>
+                      </span>
+                      {t.ai_confidence !== null && (
+                        <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-[#326b58] ring-1 ring-[#d7e7df]">
+                          {Math.round(t.ai_confidence * 100)}% confidence
+                        </span>
+                      )}
+                    </div>
+                    {t.ai_confidence !== null && (
+                      <>
+                        <div
+                          className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#dceae3]"
+                          role="progressbar"
+                          aria-label="AI category confidence"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.round(t.ai_confidence * 100)}
+                        >
+                          <div
+                            className="h-full rounded-full bg-[#4c8874] transition-[width] duration-500"
+                            style={{ width: `${t.ai_confidence * 100}%` }}
+                          />
+                        </div>
+                        <small className="mt-1.5 block text-[9px] text-[#789087]">
+                          Model-reported category confidence
+                        </small>
+                      </>
+                    )}
                     {(t.category !== t.ai_category ||
                       t.priority !== t.ai_priority) && (
                       <p className="mt-1 mb-0">Adjusted by an agent.</p>

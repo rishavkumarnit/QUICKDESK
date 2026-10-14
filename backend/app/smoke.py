@@ -18,7 +18,9 @@ def main():
         result.raise_for_status()
         ticket = result.json()
         assert ticket['classification_status'] == 'complete', 'Classification failed'
-        print('Live classification: ' + ticket['category'] + ' / ' + ticket['priority'])
+        assert 0 <= ticket['ai_confidence'] <= 1, 'Invalid confidence score'
+        print('Live classification: ' + ticket['category'] + ' / ' + ticket['priority']
+              + ' (' + str(round(ticket['ai_confidence'] * 100)) + '% confidence)')
         path = '/tickets/' + ticket['id']
         result = agent.post(path + '/drafts')
         result.raise_for_status()

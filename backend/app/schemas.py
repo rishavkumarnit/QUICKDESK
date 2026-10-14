@@ -26,6 +26,11 @@ class Reply(Input):
 class Classification(BaseModel):
     category: Category
     priority: Priority
+    confidence: float = Field(
+        ge=0,
+        le=1,
+        description='Model confidence in the category suggestion, from 0 to 1.',
+    )
 
 class GroundedReply(BaseModel):
     supported: bool

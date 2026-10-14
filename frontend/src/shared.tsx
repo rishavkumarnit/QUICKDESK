@@ -22,6 +22,7 @@ export type Ticket = {
   resolved_at: string | null;
   ai_category: string | null;
   ai_priority: string | null;
+  ai_confidence: number | null;
   classification_status: string;
   attachment: string | null;
   final_reply: string | null;

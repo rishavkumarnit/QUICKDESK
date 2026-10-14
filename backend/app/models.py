@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import String, Text, DateTime, ForeignKey, JSON, Integer, CheckConstraint
+from sqlalchemy import String, Text, DateTime, ForeignKey, JSON, Integer, Float, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 
@@ -37,6 +37,7 @@ class Ticket(Base):
     priority: Mapped[str] = mapped_column(String(20), default='Medium', index=True)
     ai_category: Mapped[str | None] = mapped_column(String(20))
     ai_priority: Mapped[str | None] = mapped_column(String(20))
+    ai_confidence: Mapped[float | None] = mapped_column(Float)
     classification_status: Mapped[str] = mapped_column(String(20), default='failed')
     final_reply: Mapped[str | None] = mapped_column(Text)
     replied_by: Mapped[str | None] = mapped_column(ForeignKey('users.id'))
@@ -46,6 +47,7 @@ class Ticket(Base):
         CheckConstraint("status in ('Open','Resolved')"),
         CheckConstraint("category in ('IT','HR','Finance','Admin','Other')"),
         CheckConstraint("priority in ('Low','Medium','High')"),
+        CheckConstraint('ai_confidence is null or (ai_confidence >= 0 and ai_confidence <= 1)'),
     )
 
 class Draft(Base):

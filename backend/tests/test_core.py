@@ -18,6 +18,7 @@ from app.auth import hasher, COOKIE
 from app.schemas import Classification, GroundedReply
 from app import ai
 from app import knowledge
+from app import seed
 from app.events import event_batch
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
@@ -116,6 +117,22 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(self.agent.patch('/api/tickets/'+identity, json={'category':'Invalid','priority':'Low'}).status_code, 422)
         self.assertEqual(self.employee.post('/api/tickets', json={'title':'abc', 'description':'          '}).status_code, 422)
         self.assertEqual(self.agent.post('/api/tickets/'+identity+'/reply', json={'body':'    '}).status_code, 422)
+
+    def test_seed_prints_working_demo_credentials(self):
+        password = 'reviewer-demo-password'
+        with (
+            patch('app.seed.SessionLocal', self.sessions),
+            patch.object(seed.settings, 'seed_password', password),
+            patch('builtins.print') as output,
+        ):
+            seed.main()
+            seed.main()
+        with self.sessions() as db:
+            account = db.scalar(select(User).where(User.email == 'agent@quickdesk.test'))
+            self.assertTrue(hasher.verify(account.password_hash, password))
+        rendered = '\n'.join(' '.join(map(str, call.args)) for call in output.call_args_list)
+        self.assertIn('agent@quickdesk.test', rendered)
+        self.assertIn('Password ' + password, rendered)
 
     def test_ai_failure_preserves_manual_workflow(self):
         with patch('app.ai.classify', side_effect=ValueError('invalid model enum')):

@@ -56,7 +56,7 @@ Open [QuickDesk](http://127.0.0.1:5173) and [API documentation](http://127.0.0.1
 | `employee@quickdesk.test` | Employee |
 | `employee2@quickdesk.test` | Second employee for isolation checks |
 
-All seeded accounts initially use `SEED_PASSWORD` from your backend environment. Rerunning the seed command preserves existing users and passwords. There is no public registration or password-reset flow in this assessment scope.
+All seeded accounts use `SEED_PASSWORD` from your backend environment. The seed command prints the ready-to-use account emails and shared password when it finishes. Rerunning it synchronizes the three demo accounts to the currently configured password, so the displayed credentials always work. There is no public registration or password-reset flow in this assessment scope.
 
 At backend startup, QuickDesk reads the six fictional Markdown articles, splits them, creates OpenAI embeddings, and builds a process-local LangChain `InMemoryVectorStore`. No separate ingestion command or vector database is required. Startup logs the loaded chunk count, and `/api/health` reports whether the index is ready. If ingestion fails, the manual helpdesk remains available and AI draft requests return a service-unavailable response. Restart the backend after changing an article or the embedding model.
 

@@ -2,11 +2,11 @@ from statistics import median
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-from app.db import get_db
-from app.auth import current_user, agent, public_user
-from app.models import User, Ticket, Draft, Audit, Event, now
+from app.db.session import get_db
+from app.api.dependencies import current_user, agent, public_user
+from app.db.models import User, Ticket, Draft, Audit, Event, now
 from app.schemas import CreateTicket, Override, Reply, Category, Priority
-from app import ai
+from app.services import ai
 
 router = APIRouter(prefix='/api', tags=['tickets'])
 

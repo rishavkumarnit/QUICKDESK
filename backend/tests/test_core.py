@@ -12,14 +12,13 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
-from app.db import Base, get_db
-from app.models import User, Draft, Ticket, LoginSession, now
-from app.auth import hasher, COOKIE
+from app.db.session import Base, get_db
+from app.db.models import User, Draft, Ticket, LoginSession, now
+from app.core.security import hasher, COOKIE
 from app.schemas import Classification, GroundedReply
-from app import ai
-from app import knowledge
-from app import seed
-from app.events import event_batch
+from app.services import ai, knowledge
+from app.scripts import seed
+from app.api.routes.events import event_batch
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
 
@@ -39,7 +38,7 @@ class CoreTests(unittest.TestCase):
         self.employee = self.login('employee')
         self.other = self.login('other')
         self.classifier = patch(
-            'app.ai.classify',
+            'app.services.ai.classify',
             return_value=Classification(category='IT', priority='Medium', confidence=0.84),
         )
         self.classifier.start()
@@ -87,7 +86,7 @@ class CoreTests(unittest.TestCase):
 
     def test_override_audit_draft_preservation_and_resolve(self):
         identity = self.ticket()
-        with patch('app.ai.draft_reply', return_value=('Original AI draft', [{'source':'vpn.md','title':'VPN','excerpt':'Help'}])):
+        with patch('app.services.ai.draft_reply', return_value=('Original AI draft', [{'source':'vpn.md','title':'VPN','excerpt':'Help'}])):
             self.assertEqual(self.agent.post('/api/tickets/'+identity+'/drafts').status_code, 201)
         result = self.agent.patch('/api/tickets/'+identity, json={'category':'HR','priority':'High'}).json()
         self.assertEqual(result['ai_category'], 'IT')
@@ -121,7 +120,7 @@ class CoreTests(unittest.TestCase):
     def test_seed_prints_working_demo_credentials(self):
         password = 'reviewer-demo-password'
         with (
-            patch('app.seed.SessionLocal', self.sessions),
+            patch('app.scripts.seed.SessionLocal', self.sessions),
             patch.object(seed.settings, 'seed_password', password),
             patch('builtins.print') as output,
         ):
@@ -135,13 +134,13 @@ class CoreTests(unittest.TestCase):
         self.assertIn('Password ' + password, rendered)
 
     def test_ai_failure_preserves_manual_workflow(self):
-        with patch('app.ai.classify', side_effect=ValueError('invalid model enum')):
+        with patch('app.services.ai.classify', side_effect=ValueError('invalid model enum')):
             identity = self.ticket()
         result = self.agent.get('/api/tickets/'+identity).json()
         self.assertEqual(result['classification_status'], 'failed')
         self.assertIsNone(result['ai_category'])
         self.assertIsNone(result['ai_confidence'])
-        with patch('app.ai.draft_reply', side_effect=TimeoutError()):
+        with patch('app.services.ai.draft_reply', side_effect=TimeoutError()):
             self.assertEqual(self.agent.post('/api/tickets/'+identity+'/drafts').status_code, 503)
         self.assertEqual(self.agent.post('/api/tickets/'+identity+'/reply', json={'body':'Manual help'}).status_code, 200)
         self.assertEqual(self.agent.get('/api/metrics').json()['classified_tickets'], 0)
@@ -150,7 +149,7 @@ class CoreTests(unittest.TestCase):
         self.ticket()
         with self.sessions() as db:
             session_ids = {s.user_id:s.id for s in db.scalars(select(LoginSession))}
-        with patch('app.events.SessionLocal', self.sessions):
+        with patch('app.api.routes.events.SessionLocal', self.sessions):
             self.assertEqual(len(event_batch('employee','employee',session_ids['employee'],0)),1)
             self.assertEqual(event_batch('other','employee',session_ids['other'],0),[])
             self.assertEqual(len(event_batch('agent','agent',session_ids['agent'],0)),1)
@@ -172,7 +171,7 @@ class RagTests(unittest.TestCase):
         self.assertNotIn('README.md', {doc.metadata['source'] for doc in documents})
 
     def test_in_memory_index_is_built_from_articles(self):
-        with patch('app.knowledge._embeddings', return_value=DeterministicFakeEmbedding(size=32)):
+        with patch('app.services.knowledge._embeddings', return_value=DeterministicFakeEmbedding(size=32)):
             count = knowledge.initialize_knowledge_base()
         self.assertEqual(count, len(knowledge.load_documents()))
         self.assertEqual(knowledge.knowledge_status(), {'ready': True, 'chunks': count})
@@ -181,14 +180,14 @@ class RagTests(unittest.TestCase):
         self.assertTrue(all(result.metadata['source'].endswith('.md') for result, _ in results))
 
     def test_no_relevant_context_does_not_generate(self):
-        with patch('app.ai.get_vector_store') as store, patch('app.ai.llm') as model:
+        with patch('app.services.ai.get_vector_store') as store, patch('app.services.ai.llm') as model:
             store.return_value.similarity_search_with_score.return_value = []
             self.assertEqual(ai.draft_reply('Unknown', 'Unrelated question'), (ai.NO_GUIDANCE, []))
             model.assert_not_called()
 
     def test_citations_must_be_retrieved(self):
         doc = Document(page_content='Sign in again', metadata={'source':'vpn.md','title':'VPN'})
-        with patch('app.ai.get_vector_store') as store, patch('app.ai.llm') as model:
+        with patch('app.services.ai.get_vector_store') as store, patch('app.services.ai.llm') as model:
             store.return_value.similarity_search_with_score.return_value = [(doc,.9)]
             model.return_value.with_structured_output.return_value.invoke.return_value = GroundedReply(supported=True,reply='Advice',sources=['invented.md'])
             with self.assertRaises(ValueError): ai.draft_reply('VPN', 'VPN issue')

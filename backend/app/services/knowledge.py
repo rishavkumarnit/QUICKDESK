@@ -7,7 +7,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from app.config import settings
+from app.core.config import settings
 
 _store: InMemoryVectorStore | None = None
 _chunk_count = 0
@@ -24,7 +24,7 @@ def _embeddings():
 
 
 def load_documents() -> list[Document]:
-    root = Path(__file__).resolve().parents[1] / "knowledge_base"
+    root = Path(__file__).resolve().parents[2] / "knowledge_base"
     splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
     documents: list[Document] = []
     for path in sorted(root.glob("*.md")):

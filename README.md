@@ -62,6 +62,23 @@ At backend startup, QuickDesk reads the six fictional Markdown articles, splits 
 
 ## Architecture
 
+The backend package is organized by responsibility:
+
+```text
+backend/app/
+├── api/
+│   ├── dependencies.py    # shared authentication and role checks
+│   ├── router.py          # top-level router assembly
+│   └── routes/            # authentication, tickets, and SSE endpoints
+├── core/                  # application settings and security primitives
+├── db/                    # SQLAlchemy session and persistence models
+├── schemas/               # auth, ticket, and structured AI contracts
+├── services/              # OpenAI classification and in-memory RAG
+├── scripts/               # seed, health-check, and live smoke commands
+├── main.py                # FastAPI application and startup lifecycle
+└── seed.py                # compatibility entry point for python -m app.seed
+```
+
 ```mermaid
 flowchart LR
   R[React + TypeScript] -->|HTTP + HttpOnly JWT cookie| F[FastAPI]
@@ -117,13 +134,13 @@ All paths are under `/api`. Mutations after login require the `X-CSRF-Token` ret
 # From backend: isolated SQLite tests, mocked AI, no external writes
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 # Read-only database connectivity
-.venv/Scripts/python.exe -m app.check_services
+.venv/Scripts/python.exe -m app.scripts.check_services
 # Also makes two small, billable synthetic OpenAI calls
-.venv/Scripts/python.exe -m app.check_services --openai
+.venv/Scripts/python.exe -m app.scripts.check_services --openai
 # Optional live workflow: creates a labeled demo ticket and resolves it
-.venv/Scripts/python.exe -m app.smoke
+.venv/Scripts/python.exe -m app.scripts.smoke
 # Optional live SSE check: creates and resolves a second labeled demo ticket
-.venv/Scripts/python.exe -m app.smoke_events
+.venv/Scripts/python.exe -m app.scripts.smoke_events
 # From frontend
 npm run build
 ```

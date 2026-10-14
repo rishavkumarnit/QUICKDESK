@@ -1,4 +1,4 @@
-"""Run from backend: python -m app.check_services [--openai].
+"""Run from backend: python -m app.scripts.check_services [--openai].
 
 The optional OpenAI checks make two tiny billable requests with synthetic text.
 Credentials and raw provider error messages are never printed.
@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import httpx
 from sqlalchemy import create_engine, text
 
-from app.config import settings
+from app.core.config import settings
 
 
 def postgres() -> str:

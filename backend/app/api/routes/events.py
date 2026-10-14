@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select, func
 from starlette.concurrency import run_in_threadpool
-from app.auth import current_user
-from app.db import SessionLocal, get_db
-from app.models import Event, LoginSession, User
+from app.api.dependencies import current_user
+from app.db.session import SessionLocal, get_db
+from app.db.models import Event, LoginSession, User
 
 router = APIRouter()
 

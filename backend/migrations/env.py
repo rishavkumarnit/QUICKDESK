@@ -1,6 +1,6 @@
 from alembic import context
-from app.db import engine, Base
-from app import models
+from app.db.session import engine, Base
+from app.db import models  # noqa: F401 - registers tables with Base.metadata
 
 if context.is_offline_mode():
     raise RuntimeError('Run migrations with an available database')

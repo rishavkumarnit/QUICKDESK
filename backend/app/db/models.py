@@ -1,8 +1,10 @@
+"""SQLAlchemy persistence models."""
+
 from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import String, Text, DateTime, ForeignKey, JSON, Integer, Float, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db import Base
+from app.db.session import Base
 
 def now():
     return datetime.now(timezone.utc)

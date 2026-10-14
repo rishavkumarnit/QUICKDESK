@@ -5,11 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
-from app.config import settings
-from app.auth import router as auth_router
-from app.tickets import router as ticket_router
-from app.events import router as event_router
-from app.knowledge import initialize_knowledge_base, knowledge_status
+from app.api.router import api_router
+from app.core.config import settings
+from app.services.knowledge import initialize_knowledge_base, knowledge_status
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +27,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="QuickDesk API", version="0.1.0", lifespan=lifespan)
-app.include_router(auth_router)
-app.include_router(ticket_router)
-app.include_router(event_router)
+app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,

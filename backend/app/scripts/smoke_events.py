@@ -4,7 +4,7 @@ from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 import httpx
-from app.smoke import login
+from app.scripts.smoke import login
 
 def watch(cookies, ready):
     found = []

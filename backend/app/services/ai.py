@@ -1,9 +1,9 @@
 """LLM classification and retrieval with validated source citations."""
 import json
 from langchain_openai import ChatOpenAI
-from app.knowledge import get_vector_store
-from app.config import settings
-from app.schemas import Classification, GroundedReply
+from app.services.knowledge import get_vector_store
+from app.core.config import settings
+from app.schemas.ai import Classification, GroundedReply
 
 def llm():
     options = {'model': settings.llm_model, 'api_key': settings.llm_api_key,

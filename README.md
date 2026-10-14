@@ -131,17 +131,85 @@ All paths are under `/api`. Mutations after login require the `X-CSRF-Token` ret
 | GET | `/metrics` | Counts, median resolution time, category override rate | Agent |
 | GET | `/events` | Authenticated, role-scoped SSE notifications | Signed in |
 
-## Decisions and tradeoffs
+## Design decisions and assessment questions
 
-- **React over Next.js:** this is an authenticated dashboard with a separate required Python backend. Vite supplies the development proxy and build; server rendering adds little for this use case. React Query owns API data and invalidation; local component state owns unsent replies. Styling uses Tailwind's Vite integration and custom CSS, without a helpdesk template.
-- **RAG:** FastAPI startup reads the local Markdown articles. LangChain's recursive character splitter uses 1200-character chunks and 200-character overlap, then OpenAI `text-embedding-3-small` embeds them into a process-local `InMemoryVectorStore`. The six short articles currently produce six chunks. The retriever selects the top three by cosine similarity with an initial `0.35` cutoff. This threshold is a heuristic, not a calibrated confidence score; representative VPN, expense, laptop, and shared-drive queries scored `0.48` to `0.62`, while an unrelated recipe query scored `0.08`. The structured draft must report whether the sources support an answer and cite retrieved filenames. Invalid citations fail closed. A no-match or unsupported answer produces a clear no-guidance draft; a service failure leaves manual replying available. The in-memory choice matches the assessment, removes vector-database setup for reviewers, and trades persistence for a small embedding cost and startup delay on every backend process.
-- **AI classification:** allowed category and priority values and a `0–1` model-reported category confidence are enforced by a Pydantic structured-output schema. The confidence is stored with the immutable original suggestion and surfaced in the ticket UI; it communicates the model's own uncertainty rather than a calibrated probability of correctness. The provider client permits one retry for retryable transport/provider failures. Invalid structured output or exhausted retries results in a stored ticket with Other/Medium defaults, a `failed` classification state, and no falsely attributed AI suggestion. The original suggestion is immutable when an agent overrides the current values.
-- **JWT storage:** an eight-hour JWT is stored in an HttpOnly, SameSite=Strict cookie scoped to `/api`. A signed CSRF claim must match the mutation header, and supplied Origin headers must match configured origins. The frontend holds only the CSRF token in memory. Database-backed session IDs allow immediate logout revocation. Production requires HTTPS, Secure cookies, and a same-site frontend/API proxy.
-- **Backend permissions:** the user and role are loaded from the database for each authenticated request. Employees cannot access agent endpoints or another employee's tickets by guessing IDs. Agent creation is restricted to the local seed/admin process. Passwords are Argon2 hashes.
-- **SSE:** the required updates flow from server to browser, so submissions and replies use HTTP and notifications use SSE. Persisted events are polled every two seconds and filtered by owner/role. Reconnect emits `ready`, which refetches authoritative state. Every 15 seconds the stream also requests reconciliation to handle concurrent event commits. Streams expire with the JWT and check revocation during polling. This is simple and works across processes, but costs one database query per stream every two seconds.
-- **Metrics:** counts use current status/category. Median resolution time is calculated from creation to resolution across resolved tickets. Category override percentage is distinct tickets with any category change divided by tickets with a valid original AI category. Each ticket is counted once even after repeated changes or a reversal.
-- **Worst current failure mode:** external AI outages or long responses delay ticket submission (classification is synchronous). Errors preserve the ticket with clearly labeled defaults. A durable background queue would reduce latency, enable controlled retries, and avoid client-timeout duplicate submissions. Human review is still necessary: source validation does not prove every sentence in a draft is supported.
-- **AI assistance disclosure:** Codex generated implementation and tests and helped diagnose reasoning-model output budgets, retrieval setup, and a frontend session-cache bug caught during browser testing. These are actual development observations, not a claim of independent human authorship. Review and personalize this section before submitting the assessment.
+### Why did you pick React rather than Next.js?
+
+I chose React with Vite because QuickDesk is an authenticated internal application. It does not require SEO, server-side rendering, or publicly indexed pages, so a client-rendered SPA keeps the architecture simple. React Query owns API data and invalidation, while local component state owns unsent replies. Tailwind CSS provides the styling.
+
+I would consider Next.js if the application later required server-rendered public pages, SEO, server components, or frontend server routes. Being externally accessible would not, by itself, require Next.js.
+
+### How did you structure the RAG pipeline?
+
+At application startup, Markdown files from the knowledge base are loaded and split using LangChain's `RecursiveCharacterTextSplitter`, with a chunk size of 1,200 characters and an overlap of 200 characters. The six knowledge-base documents are currently shorter than 1,200 characters, so each produces one chunk. The splitter allows larger documents to be supported without changing the ingestion pipeline.
+
+OpenAI's `text-embedding-3-small` model generates embeddings for the chunks, which are stored in a process-local LangChain `InMemoryVectorStore`. For each ticket, the retriever selects the three most similar chunks and removes results below the configured cosine-similarity threshold of `0.35`.
+
+The retrieved content is passed to the LLM with instructions to:
+
+- Use only the supplied company documentation.
+- Avoid inventing policies, contacts, procedures, approvals, or links.
+- Return the exact filenames used as sources.
+- Report that the request is unsupported when the retrieved articles cannot answer it.
+
+The backend verifies that every citation returned by the model belongs to the retrieved source set. Invalid citations fail closed. A no-match or unsupported answer produces a clear no-guidance result, while a service failure leaves manual replying available. In production, I would select the similarity threshold using a representative retrieval evaluation dataset rather than assuming a fixed value is suitable for every corpus.
+
+Classification is a separate LLM call. It returns a category, priority, and model-reported confidence score through a strict structured-output schema.
+
+### How did you handle a category outside the allowed list?
+
+The permitted categories are `IT`, `HR`, `Finance`, `Admin`, and `Other`. OpenAI structured output and a Pydantic `Literal` schema enforce that list, so an unrecognized category fails validation instead of being stored. The database also has a check constraint as a final safeguard.
+
+If classification fails because of invalid output, a timeout, or a provider error, the ticket is still created with:
+
+- Category: `Other`
+- Priority: `Medium`
+- Classification status: `failed`
+- AI confidence: `null`
+
+There is currently no confidence cutoff for accepting a valid category. The score is constrained to the range zero to one and shown to the agent, but it represents the model's reported uncertainty rather than a calibrated probability. A future version could route low-confidence suggestions for manual categorization, with the cutoff selected through evaluation data.
+
+### Where did you store the JWT on the client, and why?
+
+The JWT is stored in an HttpOnly cookie scoped to `/api`. Frontend JavaScript cannot directly read it, which reduces the risk of JWT theft through XSS. The cookie uses `SameSite=Strict`, and `Secure` is enabled in production.
+
+State-changing requests require a separate CSRF token in the `X-CSRF-Token` header. The frontend holds that token in memory rather than persistent browser storage. Supplied `Origin` headers must also match a configured origin.
+
+The JWT is valid for eight hours and contains a session ID. The backend checks that ID against a database session record on every authenticated request, allowing logout to revoke the session immediately. For production, I would consider short-lived access tokens and rotating refresh tokens based on the required balance between security and usability.
+
+### How did you enforce role-based access on the backend?
+
+Authorization is enforced by the backend rather than relying on hidden frontend routes. Every protected request validates the JWT, loads the user, and confirms that the database session still exists. Agent-only endpoints use an authorization dependency that returns `403 Forbidden` unless the authenticated user has the `agent` role.
+
+Employee ticket queries are filtered by the authenticated employee's user ID. If an employee guesses another ticket's URL, the backend returns `404` instead of exposing that ticket. Manually entering an agent URL or calling it through Postman therefore does not bypass authorization. Agent creation is restricted to the local seed or admin process, and passwords are stored as Argon2 hashes.
+
+### Why did you choose SSE, and what happens if the connection drops?
+
+I chose Server-Sent Events because the real-time requirement is one-directional: the server needs to notify browsers about ticket changes. Ticket creation, updates, and replies continue to use ordinary HTTP APIs.
+
+Events are persisted in PostgreSQL. Each SSE stream polls for relevant events every two seconds. Employees receive only their own events, while agents receive all ticket events.
+
+If the connection drops, the browser automatically attempts to reconnect. On every new connection, the backend emits a `ready` event that causes the frontend to refetch authoritative state. It also emits `ready` every 15 seconds to reconcile concurrent commits or missed notifications. Consequently, SSE acts as an invalidation signal; PostgreSQL and the HTTP API remain the system of record. Streams expire with the JWT and regularly check whether the database session has been revoked.
+
+The main scalability limitation is one database query per active stream every two seconds. For production, I would retain SSE but distribute events through Redis Pub/Sub, PostgreSQL `LISTEN/NOTIFY`, or a message broker. I would choose WebSockets if continuous bidirectional communication became necessary.
+
+### What is the worst failure mode today, and how would you address it?
+
+The most significant failure mode is that classification runs synchronously during ticket creation and before the ticket is persisted. If OpenAI is slow or unavailable, the HTTP request waits until the model responds or the 45-second timeout is reached. A handled timeout or provider error still creates the ticket as `Other` with `Medium` priority, no confidence score, and a failed classification state. However, a backend process failure while waiting for OpenAI could prevent the ticket from being saved.
+
+The application supports only OpenAI and has no fallback LLM or embedding provider. An OpenAI outage therefore disables automatic classification and AI-generated replies. If embeddings are unavailable during startup, the knowledge index cannot be built, although the manual helpdesk workflow remains available.
+
+I would first persist the ticket with a `pending` classification status and then enqueue classification as a background job. A worker would process it asynchronously with retries, timeouts, idempotency, and circuit breaking. I would then add a provider abstraction for a tested fallback LLM and embedding provider. Before enabling automatic failover, I would add offline evaluation datasets and production monitoring to confirm consistent categories, priorities, retrieval results, and grounded responses across providers.
+
+### Where did AI tools help most, and where did they hurt or mislead you?
+
+Codex assisted extensively with scaffolding, implementation, refactoring, test creation, and identifying security and edge-case concerns. I remained responsible for the architecture, requirements, configuration, reviewing generated code, and validating the completed workflows.
+
+The tool was less effective when product preferences were not explicitly specified. Its initial UI was functional but generic because it did not have a detailed design reference such as a Figma file. It also initially introduced a Docker-based PostgreSQL setup even though I had selected Neon. Those cases reinforced the need to give AI tools precise constraints and review every architectural and product decision rather than accepting generated code without verification.
+
+### Metrics definitions
+
+Counts use the current ticket status and category. Median resolution time is calculated from creation to resolution across resolved tickets. Category override percentage is the number of distinct tickets with any category change divided by tickets with a valid original AI category. Each ticket is counted once even after repeated changes or a reversal.
 
 ## Verification
 

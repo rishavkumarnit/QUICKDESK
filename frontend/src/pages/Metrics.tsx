@@ -33,7 +33,9 @@ export default function Metrics() {
         </span>
       </div>
       <div className="mb-[26px] grid grid-cols-2 gap-2.5 min-[1101px]:grid-cols-4 min-[1101px]:gap-[18px]">
-        <div className={`${ui.panel} p-[18px] min-[801px]:p-[22px]`}>
+        <div
+          className={`${ui.panel} relative overflow-hidden p-[18px] before:absolute before:top-0 before:left-0 before:h-1 before:w-full before:bg-[#4c8874] min-[801px]:p-[22px]`}
+        >
           <span className="text-[11px] text-[#7d8b95]">Total requests</span>
           <strong className="my-[15px] block text-[28px] font-semibold tracking-[-1px] min-[801px]:text-[33px]">
             {total}
@@ -42,7 +44,9 @@ export default function Metrics() {
             Across all categories
           </small>
         </div>
-        <div className={`${ui.panel} p-[18px] min-[801px]:p-[22px]`}>
+        <div
+          className={`${ui.panel} relative overflow-hidden p-[18px] before:absolute before:top-0 before:left-0 before:h-1 before:w-full before:bg-[#d3a552] min-[801px]:p-[22px]`}
+        >
           <span className="text-[11px] text-[#7d8b95]">Open tickets</span>
           <strong className="my-[15px] block text-[28px] font-semibold tracking-[-1px] min-[801px]:text-[33px]">
             {m.statuses.Open}
@@ -51,7 +55,9 @@ export default function Metrics() {
             Waiting for a resolution
           </small>
         </div>
-        <div className={`${ui.panel} p-[18px] min-[801px]:p-[22px]`}>
+        <div
+          className={`${ui.panel} relative overflow-hidden p-[18px] before:absolute before:top-0 before:left-0 before:h-1 before:w-full before:bg-[#6d8ba1] min-[801px]:p-[22px]`}
+        >
           <span className="text-[11px] text-[#7d8b95]">Median resolution</span>
           <strong className="my-[15px] block text-[28px] font-semibold tracking-[-1px] min-[801px]:text-[33px]">
             {m.median_resolution_hours === null
@@ -64,7 +70,9 @@ export default function Metrics() {
             Resolved tickets only
           </small>
         </div>
-        <div className={`${ui.panel} p-[18px] min-[801px]:p-[22px]`}>
+        <div
+          className={`${ui.panel} relative overflow-hidden p-[18px] before:absolute before:top-0 before:left-0 before:h-1 before:w-full before:bg-[#9874a8] min-[801px]:p-[22px]`}
+        >
           <span className="text-[11px] text-[#7d8b95]">
             AI category overrides
           </span>
@@ -88,7 +96,7 @@ export default function Metrics() {
               </div>
               <div className="h-2 overflow-hidden rounded-lg bg-[#f0f4f2]">
                 <div
-                  className="h-full rounded-lg bg-[#60937c]"
+                  className="h-full rounded-lg bg-[linear-gradient(90deg,#477c6a,#77a894)] transition-[width] duration-500"
                   style={{ width: (total ? (count / total) * 100 : 0) + "%" }}
                 />
               </div>

@@ -8,15 +8,40 @@
 
 @layer base {
   html {
-    @apply bg-[#f6f8fa] text-[#263646] antialiased;
+    @apply bg-[#f5f8f6] text-[#263646] antialiased;
   }
 
   body {
-    @apply m-0 min-h-screen;
+    @apply m-0 min-h-screen bg-[radial-gradient(circle_at_80%_0%,rgba(220,237,229,0.42),transparent_32%),#f5f8f6];
+  }
+
+  ::selection {
+    @apply bg-[#cfe3da] text-[#183d33];
   }
 
   button:not(:disabled),
   summary {
     @apply cursor-pointer;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: page-in 280ms ease-out both;
   }
 }

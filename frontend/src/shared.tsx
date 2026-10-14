@@ -40,20 +40,20 @@ export const categories = ["IT", "HR", "Finance", "Admin", "Other"];
 export const priorities = ["Low", "Medium", "High"];
 export const ui = {
   panel:
-    "rounded-[10px] border border-[#e2e7eb] bg-white shadow-[0_2px_3px_#26364602]",
+    "rounded-2xl border border-[#dde6e2] bg-white/95 shadow-[0_1px_2px_rgba(29,55,45,0.04),0_12px_32px_rgba(29,55,45,0.055)]",
   button:
-    "inline-flex items-center justify-center gap-2 rounded-[7px] border border-[#dce3e8] bg-white px-[15px] py-[10px] text-[13px] font-semibold transition-colors hover:bg-[#f2f6f7] disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8e1dd] bg-white px-[15px] py-[10px] text-[13px] font-semibold shadow-sm transition-all hover:-translate-y-px hover:border-[#c4d4cd] hover:bg-[#f5f8f7] hover:shadow disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3d7c6c]/25",
   primary:
-    "inline-flex items-center justify-center gap-2 rounded-[7px] border border-[#22665b] bg-[#22665b] px-[15px] py-[10px] text-[13px] font-semibold text-white transition-colors hover:bg-[#174e44] disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex items-center justify-center gap-2 rounded-lg border border-[#22665b] bg-[#22665b] px-[15px] py-[10px] text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(34,102,91,0.18)] transition-all hover:-translate-y-px hover:bg-[#195548] hover:shadow-[0_9px_20px_rgba(34,102,91,0.23)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3d7c6c]/30 focus-visible:ring-offset-2",
   secondary:
-    "inline-flex items-center justify-center gap-2 rounded-[7px] border border-[#d2e4dd] bg-[#edf5f2] px-[15px] py-[10px] text-[13px] font-semibold text-[#22665b] transition-colors hover:bg-[#e3efeb] disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex items-center justify-center gap-2 rounded-lg border border-[#cfe1d9] bg-[#edf6f2] px-[15px] py-[10px] text-[13px] font-semibold text-[#22665b] transition-all hover:-translate-y-px hover:border-[#b8d5c9] hover:bg-[#e4f0eb] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3d7c6c]/25",
   field:
-    "mt-2 block w-full rounded-md border border-[#dce3e8] bg-white px-3 py-[11px] text-[13px] font-normal text-[#344553] outline-offset-4 placeholder:text-[#9aa5ae] focus:border-[#528477] focus:ring-2 focus:ring-[#528477]/15 disabled:bg-[#f5f7f8]",
+    "mt-2 block w-full rounded-lg border border-[#d8e2de] bg-white px-3.5 py-[11px] text-[13px] font-normal text-[#344553] shadow-[0_1px_2px_rgba(27,56,45,0.03)] outline-none transition placeholder:text-[#9aa5ae] hover:border-[#c8d6d0] focus:border-[#4d8174] focus:ring-3 focus:ring-[#528477]/12 disabled:bg-[#f5f7f8]",
   label: "mb-[22px] block text-xs font-semibold",
   eyebrow: "mb-3 block text-[10px] font-bold tracking-[1.7px] text-[#528477]",
   muted: "text-sm text-[#75818c]",
   heading:
-    "mb-3 text-[28px] font-semibold leading-[1.2] tracking-[-1px] min-[801px]:text-[34px]",
+    "mb-3 text-[30px] font-semibold leading-[1.15] tracking-[-1.2px] text-[#20362f] min-[801px]:text-[36px]",
   sectionHeading: "mb-4 text-[17px] font-semibold tracking-[-0.3px]",
   pageHeading:
     "mb-7 flex items-start justify-between gap-6 min-[801px]:items-center",
@@ -126,7 +126,7 @@ const badgeTone: Record<string, string> = {
 };
 export const badge = (value: string) => (
   <span
-    className={`inline-flex whitespace-nowrap rounded-[5px] px-[9px] py-1 text-[10px] font-semibold ${badgeTone[value.toLowerCase()] ?? "bg-[#eef1f5] text-[#637484]"}`}
+    className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-current/10 ${badgeTone[value.toLowerCase()] ?? "bg-[#eef1f5] text-[#637484]"}`}
   >
     {value}
   </span>
@@ -145,9 +145,37 @@ export function ErrorMessage({ error }: { error: Error | null }) {
 }
 export function Loading() {
   return (
-    <div className="px-6 py-[70px] text-center" role="status">
+    <div
+      className="px-6 py-[70px] text-center text-sm text-[#718078]"
+      role="status"
+    >
+      <span className="mx-auto mb-4 block h-7 w-7 animate-spin rounded-full border-2 border-[#d9e5df] border-t-[#22665b]" />
       Loading your workspace…
     </div>
+  );
+}
+
+export function BrandMark({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#22665b] text-white shadow-[0_6px_14px_rgba(34,102,91,0.22)] ${className}`}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" fill="none">
+        <path
+          d="M6.4 5.5h11.2a2.9 2.9 0 0 1 2.9 2.9v5.2a2.9 2.9 0 0 1-2.9 2.9h-5.1l-4.2 3v-3H6.4a2.9 2.9 0 0 1-2.9-2.9V8.4a2.9 2.9 0 0 1 2.9-2.9Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M8 10h8M8 13h5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
   );
 }
 export function refresh() {

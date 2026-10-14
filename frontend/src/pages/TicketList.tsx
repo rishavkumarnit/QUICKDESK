@@ -63,14 +63,19 @@ export default function TicketList({ user }: { user: User }) {
         )}
       </div>
       <div className={ui.panel}>
-        <div className="flex flex-wrap gap-1.5 border-b border-[#e9edf0] p-3 min-[1101px]:gap-2.5 min-[1101px]:p-[18px]">
-          <input
-            className={`${ui.field} mt-0 min-w-[130px] basis-full min-[1101px]:flex-1 min-[1101px]:basis-auto`}
-            aria-label="Search ticket titles"
-            placeholder="Search ticket titles…"
-            value={search}
-            onChange={(e) => change(setSearch)(e.target.value)}
-          />
+        <div className="flex flex-wrap gap-1.5 rounded-t-2xl border-b border-[#e5ebe8] bg-[#fbfcfb] p-3 min-[1101px]:gap-2.5 min-[1101px]:p-[18px]">
+          <div className="relative min-w-[130px] basis-full min-[1101px]:flex-1 min-[1101px]:basis-auto">
+            <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm text-[#8b9992]">
+              ⌕
+            </span>
+            <input
+              className={`${ui.field} mt-0 pl-9`}
+              aria-label="Search ticket titles"
+              placeholder="Search ticket titles…"
+              value={search}
+              onChange={(e) => change(setSearch)(e.target.value)}
+            />
+          </div>
           <select
             className={`${ui.field} mt-0 min-w-0 flex-1 text-xs min-[1101px]:w-auto min-[1101px]:min-w-[125px] min-[1101px]:flex-none`}
             aria-label="Filter status"
@@ -127,10 +132,13 @@ export default function TicketList({ user }: { user: User }) {
                   </thead>
                   <tbody>
                     {tickets.data.items.map((t) => (
-                      <tr className="hover:bg-[#fbfdfc]" key={t.id}>
+                      <tr
+                        className="group transition-colors hover:bg-[#f7fbf9]"
+                        key={t.id}
+                      >
                         <td className="border-b border-[#edf0f2] p-5">
                           <Link
-                            className="block max-w-[440px] text-[13px] font-semibold hover:text-[#22665b] hover:underline"
+                            className="block max-w-[440px] text-[13px] font-semibold transition-colors group-hover:text-[#22665b] hover:underline"
                             to={"/tickets/" + t.id}
                           >
                             {t.title}

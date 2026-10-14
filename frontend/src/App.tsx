@@ -9,6 +9,7 @@ import {
   refresh,
   ErrorMessage,
   Loading,
+  BrandMark,
   ui,
   type Session,
 } from "./shared";
@@ -74,14 +75,12 @@ export default function App() {
   const user = session.data.user;
   return (
     <div className="min-h-screen min-[801px]:flex">
-      <aside className="relative z-10 flex w-full flex-col border-b border-[#e4e9ed] bg-white p-[18px] min-[801px]:fixed min-[801px]:h-screen min-[801px]:w-[200px] min-[801px]:border-r min-[801px]:border-b-0 min-[801px]:p-[30px_20px] min-[1101px]:w-[232px]">
+      <aside className="relative z-10 flex w-full flex-col border-b border-[#dfe7e3] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbf9_100%)] p-[18px] min-[801px]:fixed min-[801px]:h-screen min-[801px]:w-[200px] min-[801px]:border-r min-[801px]:border-b-0 min-[801px]:p-[30px_20px] min-[1101px]:w-[232px]">
         <Link
           className="mb-4 flex items-center gap-2.5 text-[22px] font-bold tracking-[-0.7px] min-[801px]:mb-12"
           to="/tickets"
         >
-          <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-[#22665b] pb-[5px] font-serif text-[29px] text-white">
-            q
-          </span>{" "}
+          <BrandMark />
           QuickDesk
         </Link>
         <span className="mx-3 mb-3 hidden text-[9px] font-semibold tracking-[1.5px] text-[#94a0ab] min-[801px]:block">
@@ -90,7 +89,7 @@ export default function App() {
         <nav className="flex flex-row gap-[5px] min-[801px]:flex-col">
           <NavLink
             className={({ isActive }) =>
-              `flex items-center gap-3.5 rounded-[7px] p-2.5 text-base text-[#74808b] hover:bg-[#f2f6f4] min-[801px]:p-3 ${isActive ? "bg-[#eaf3ee] text-[#276357]" : ""}`
+              `flex items-center gap-3.5 rounded-xl p-2.5 text-base text-[#74808b] transition-all hover:translate-x-0.5 hover:bg-[#f0f6f3] min-[801px]:p-3 ${isActive ? "bg-[#e6f1ec] font-semibold text-[#276357] shadow-[inset_3px_0_0_#3d7c6c]" : ""}`
             }
             to="/tickets"
           >
@@ -102,7 +101,7 @@ export default function App() {
           {user.role === "agent" && (
             <NavLink
               className={({ isActive }) =>
-                `flex items-center gap-3.5 rounded-[7px] p-2.5 text-base text-[#74808b] hover:bg-[#f2f6f4] min-[801px]:p-3 ${isActive ? "bg-[#eaf3ee] text-[#276357]" : ""}`
+                `flex items-center gap-3.5 rounded-xl p-2.5 text-base text-[#74808b] transition-all hover:translate-x-0.5 hover:bg-[#f0f6f3] min-[801px]:p-3 ${isActive ? "bg-[#e6f1ec] font-semibold text-[#276357] shadow-[inset_3px_0_0_#3d7c6c]" : ""}`
               }
               to="/metrics"
             >
@@ -112,7 +111,7 @@ export default function App() {
           {user.role === "employee" && (
             <NavLink
               className={({ isActive }) =>
-                `flex items-center gap-3.5 rounded-[7px] p-2.5 text-base text-[#74808b] hover:bg-[#f2f6f4] min-[801px]:p-3 ${isActive ? "bg-[#eaf3ee] text-[#276357]" : ""}`
+                `flex items-center gap-3.5 rounded-xl p-2.5 text-base text-[#74808b] transition-all hover:translate-x-0.5 hover:bg-[#f0f6f3] min-[801px]:p-3 ${isActive ? "bg-[#e6f1ec] font-semibold text-[#276357] shadow-[inset_3px_0_0_#3d7c6c]" : ""}`
               }
               to="/new"
             >
@@ -153,19 +152,19 @@ export default function App() {
         <ErrorMessage error={logout.error} />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col min-[801px]:ml-[200px] min-[1101px]:ml-[232px]">
-        <header className="flex h-[55px] items-center justify-between border-b border-[#e4e9ed] bg-white px-[18px] text-[10px] text-[#7a8791] min-[801px]:h-[72px] min-[801px]:px-6 min-[1101px]:px-10 min-[1101px]:text-[11px]">
+        <header className="sticky top-0 z-[5] flex h-[55px] items-center justify-between border-b border-[#dfe7e3] bg-white/85 px-[18px] text-[10px] text-[#7a8791] backdrop-blur-xl min-[801px]:h-[72px] min-[801px]:px-6 min-[1101px]:px-10 min-[1101px]:text-[11px]">
           <span>
             Internal support <span className="mx-[13px] text-[#c5ccd2]">/</span>{" "}
             {user.role === "agent" ? "Agent workspace" : "Employee workspace"}
           </span>
-          <span className="flex items-center gap-[7px] text-[10px]">
+          <span className="flex items-center gap-[7px] rounded-full bg-[#f4f7f5] px-2.5 py-1.5 text-[10px] ring-1 ring-[#e2e9e5]">
             <i
               className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#58a083]" : "bg-[#d8a44a]"}`}
             />
             {connected ? "Live updates on" : "Reconnecting…"}
           </span>
         </header>
-        <main className="mx-auto w-full max-w-[1450px] flex-1 px-[18px] py-7 min-[801px]:px-6 min-[1101px]:px-10 min-[1101px]:py-[42px] min-[1500px]:pt-[55px]">
+        <main className="page-enter mx-auto w-full max-w-[1450px] flex-1 px-[18px] py-7 min-[801px]:px-6 min-[1101px]:px-10 min-[1101px]:py-[42px] min-[1500px]:pt-[55px]">
           <Routes>
             <Route path="/tickets" element={<TicketList user={user} />} />
             <Route path="/tickets/:id" element={<TicketDetail user={user} />} />

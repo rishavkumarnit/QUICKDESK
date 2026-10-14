@@ -14,10 +14,24 @@ Copy-Item backend/.env.example backend/.env
 
 Skip the copy if your `.env` already exists. Configure:
 
+Generate a JWT signing secret once:
+
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+The command prints the secret; it does not edit the environment file. Copy the complete output and set it in `backend/.env`:
+
+```dotenv
+JWT_SECRET=paste-the-generated-value-here
+```
+
+Keep this value stable between backend restarts. Replacing `JWT_SECRET` invalidates existing session cookies, so all users must sign in again.
+
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Neon connection URL, retaining TLS parameters; `postgresql://` is accepted and mapped to psycopg |
-| `JWT_SECRET` | At least 32 random characters; generate with `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `JWT_SECRET` | Stable server-side key used to sign authentication tokens; generate it using the command above |
 | `SEED_PASSWORD` | At least 12 characters for the three sample users; choose a unique local demo password |
 | `LLM_PROVIDER` / `LLM_MODEL` | `openai` / `gpt-5-mini` |
 | `LLM_API_KEY` | OpenAI generation key |

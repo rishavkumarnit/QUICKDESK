@@ -233,6 +233,8 @@ The isolated tests cover authentication, CSRF, revocation, role/ownership checks
 ## Known limitations and more time
 
 - No login or AI-call rate limiting, production monitoring, or background job queue. Deploy behind appropriate controls before broader use.
+- Add a provider abstraction so the application can support tested alternative LLM and embedding providers, including controlled fallback when OpenAI is unavailable.
+- Add offline evaluations with representative labeled tickets and retrieval cases, plus online evaluations and production monitoring for classification accuracy, retrieval relevance, groundedness, latency, failures, and agent overrides.
 - Six fictional articles are demonstration content, not real company policy. Attachments store filenames only.
 - No ticket reopening, follow-up thread, public registration, email delivery, or actual upload handling.
 - SSE polling and Python-side median calculation suit a small assessment dataset. At scale, use a shared event broker, periodic event/session cleanup, and database-side percentile aggregation.

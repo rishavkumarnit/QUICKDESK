@@ -207,10 +207,6 @@ Codex assisted extensively with scaffolding, implementation, refactoring, test c
 
 The tool was less effective when product preferences were not explicitly specified. Its initial UI was functional but generic because it did not have a detailed design reference such as a Figma file. It also initially introduced a Docker-based PostgreSQL setup even though I had selected Neon. Those cases reinforced the need to give AI tools precise constraints and review every architectural and product decision rather than accepting generated code without verification.
 
-### Metrics definitions
-
-Counts use the current ticket status and category. Median resolution time is calculated from creation to resolution across resolved tickets. Category override percentage is the number of distinct tickets with any category change divided by tickets with a valid original AI category. Each ticket is counted once even after repeated changes or a reversal.
-
 ## Verification
 
 ```powershell
@@ -241,11 +237,3 @@ The isolated tests cover authentication, CSRF, revocation, role/ownership checks
 - RAG is explicitly retrieved and grounded, but cannot guarantee hallucination-free output. Add a larger retrieval evaluation set and policy-specific review checks before real use.
 - The in-memory knowledge index is rebuilt for every backend process and restart. This is simple for the small assessment dataset but adds startup time and embedding calls; a persistent vector store is more suitable at production scale.
 - Production hosting, a public GitHub repository, and the demo recording remain separate submission steps. No deployment was performed.
-
-## Demo outline (3–5 minutes)
-
-1. Sign in as an employee, submit a VPN request, and show the stored AI category/priority.
-2. In a separate browser profile, show the new ticket appearing in the agent queue without refreshing.
-3. Open the ticket, generate a draft, expand its sources, override priority, and show the audit entry.
-4. Copy the draft into the editor, edit it, and send. Show the employee's live resolved status and final reply.
-5. Show the retained original draft and metrics, then explain the architecture and one concrete limitation.

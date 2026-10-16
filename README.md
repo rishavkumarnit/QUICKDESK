@@ -45,6 +45,8 @@ npm run dev -- --host 127.0.0.1
 
 Open [QuickDesk](http://127.0.0.1:5173) and [API documentation](http://127.0.0.1:8000/docs).
 
+Vite is configured to use port `5173` and stop with a clear error if that port is already occupied. Stop the process using `5173` before starting another copy. If you intentionally use a different frontend port, set `FRONTEND_ORIGIN` in `backend/.env` to that exact origin and restart the backend.
+
 | Seed account | Role |
 | --- | --- |
 | `agent@quickdesk.test` | Agent |

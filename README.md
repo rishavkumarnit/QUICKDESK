@@ -210,25 +210,6 @@ Codex assisted extensively with scaffolding, implementation, refactoring, test c
 
 The tool was less effective when product preferences were not explicitly specified. Its initial UI was functional but generic because it did not have a detailed design reference such as a Figma file. It also initially introduced a Docker-based PostgreSQL setup even though I had selected Neon. Those cases reinforced the need to give AI tools precise constraints and review every architectural and product decision rather than accepting generated code without verification.
 
-## Verification
-
-```powershell
-# From backend: isolated SQLite tests, mocked AI, no external writes
-.venv/Scripts/python.exe -m unittest discover -s tests -v
-# Read-only database connectivity
-.venv/Scripts/python.exe -m app.scripts.check_services
-# Also makes two small, billable synthetic OpenAI calls
-.venv/Scripts/python.exe -m app.scripts.check_services --openai
-# Optional live workflow: creates a labeled demo ticket and resolves it
-.venv/Scripts/python.exe -m app.scripts.smoke
-# Optional live SSE check: creates and resolves a second labeled demo ticket
-.venv/Scripts/python.exe -m app.scripts.smoke_events
-# From frontend
-npm run build
-```
-
-The isolated tests cover authentication, CSRF, revocation, role/ownership checks, validation and filters, audit events, immutable drafts, duplicate resolution, AI failure fallback, event scoping, knowledge-article loading, and citation rejection. A live Neon/OpenAI workflow was verified with a VPN ticket classified IT/Medium and a draft citing two articles. Live SSE checks confirmed both employee and agent sessions received creation and resolution events. An unrelated recipe query returned the no-guidance fallback. SQLite tests do not prove PostgreSQL lock behavior under simultaneous load.
-
 ## Known limitations and more time
 
 - No login or AI-call rate limiting, production monitoring, or background job queue. Deploy behind appropriate controls before broader use.

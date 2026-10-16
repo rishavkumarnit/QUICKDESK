@@ -12,41 +12,19 @@ Requirements: Python 3.11+ (tested on 3.13), Node.js 22.12+ or compatible newer 
 python -m venv backend/.venv
 backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.lock.txt
 Copy-Item backend/.env.example backend/.env
-```
-
-Skip the copy if your `.env` already exists. Configure:
-
-Generate a JWT signing secret once:
-
-```powershell
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-The command prints the secret; it does not edit the environment file. Copy the complete output and set it in `backend/.env`:
+Skip the copy if your `.env` already exists. The final command prints a JWT signing secret; it does not edit the environment file. Copy its complete output into `backend/.env`, then configure the database, OpenAI credentials, and seed password:
 
 ```dotenv
 JWT_SECRET=paste-the-generated-value-here
+SEED_PASSWORD=choose-a-demo-password-of-at-least-12-characters
 ```
 
-Keep this value stable between backend restarts. Replacing `JWT_SECRET` invalidates existing session cookies, so all users must sign in again.
+Keep `JWT_SECRET` stable between backend restarts. Replacing it invalidates existing session cookies, so all users must sign in again. `SEED_PASSWORD` must contain at least 12 characters and becomes the shared login password for the sample accounts.
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Neon connection URL, retaining TLS parameters; `postgresql://` is accepted and mapped to psycopg |
-| `JWT_SECRET` | Stable server-side key used to sign authentication tokens; generate it using the command above |
-| `SEED_PASSWORD` | At least 12 characters for the three sample users; choose a unique local demo password |
-| `LLM_PROVIDER` | Must be `openai`; other providers are not implemented |
-| `LLM_MODEL` | OpenAI chat model with structured-output support; default setup uses `gpt-5-mini` |
-| `LLM_API_KEY` | OpenAI API key used for classification and reply generation |
-| `EMBEDDING_MODEL` | OpenAI embedding model; default setup uses `text-embedding-3-small` |
-| `EMBEDDING_API_KEY` | OpenAI API key used for embeddings; it may be the same as `LLM_API_KEY` |
-| `RAG_MIN_SCORE` | Optional cosine-similarity threshold for retrieved chunks; default `0.35` |
-| `FRONTEND_ORIGIN` | `http://localhost:5173`; the same-port `127.0.0.1` alias is also accepted in development |
-| `APP_ENV` | `development`; `production` enables Secure session cookies |
-
-Environment files, virtual environments, build output, and local credentials are ignored by Git. Never put API keys in frontend variables.
-
-Initialize the application and knowledge base:
+After saving `backend/.env`, initialize and start the backend in the first terminal:
 
 ```powershell
 cd backend
@@ -55,7 +33,9 @@ cd backend
 .venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-In a second terminal:
+The seed command assigns this password to all three sample accounts and prints their login credentials when it finishes. If the accounts already exist, rerunning the command updates them to the current `SEED_PASSWORD` value.
+
+Install and start the frontend in a second terminal:
 
 ```powershell
 cd frontend
@@ -74,6 +54,24 @@ Open [QuickDesk](http://127.0.0.1:5173) and [API documentation](http://127.0.0.1
 All seeded accounts use `SEED_PASSWORD` from your backend environment. The seed command prints the ready-to-use account emails and shared password when it finishes. Rerunning it synchronizes the three demo accounts to the currently configured password, so the displayed credentials always work. There is no public registration or password-reset flow in this assessment scope.
 
 At backend startup, QuickDesk reads the six fictional Markdown articles, splits them, creates OpenAI embeddings, and builds a process-local LangChain `InMemoryVectorStore`. No separate ingestion command or vector database is required. Startup logs the loaded chunk count, and `/api/health` reports whether the index is ready. If ingestion fails, the manual helpdesk remains available and AI draft requests return a service-unavailable response. Restart the backend after changing an article or the embedding model.
+
+## Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Connection URL for a local or hosted PostgreSQL database; `postgresql://` is accepted and mapped to psycopg |
+| `JWT_SECRET` | Stable server-side key used to sign authentication tokens; generate it using the setup command above |
+| `SEED_PASSWORD` | Shared password for the three sample users; it must contain at least 12 characters and be set before running the seed command |
+| `LLM_PROVIDER` | Must be `openai`; other providers are not implemented |
+| `LLM_MODEL` | OpenAI chat model with structured-output support; default setup uses `gpt-5-mini` |
+| `LLM_API_KEY` | OpenAI API key used for classification and reply generation |
+| `EMBEDDING_MODEL` | OpenAI embedding model; default setup uses `text-embedding-3-small` |
+| `EMBEDDING_API_KEY` | OpenAI API key used for embeddings; it may be the same as `LLM_API_KEY` |
+| `RAG_MIN_SCORE` | Optional cosine-similarity threshold for retrieved chunks; default `0.35` |
+| `FRONTEND_ORIGIN` | `http://localhost:5173`; the same-port `127.0.0.1` alias is also accepted in development |
+| `APP_ENV` | `development`; `production` enables Secure session cookies |
+
+Environment files, virtual environments, build output, and local credentials are ignored by Git. Never put API keys in frontend variables.
 
 ## Architecture
 

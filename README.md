@@ -12,19 +12,30 @@ Requirements: Python 3.11+ (tested on 3.13), Node.js 22.12+ or compatible newer 
 python -m venv backend/.venv
 backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.lock.txt
 Copy-Item backend/.env.example backend/.env
+cd frontend
+npm ci
+npm run dev -- --host 127.0.0.1
+```
+
+Skip the copy if your `.env` already exists. Keep this first terminal running and copy the exact `Local` URL printed by Vite, such as `http://127.0.0.1:5173`. If that port is occupied, Vite may select `5174` or another available port.
+
+In a second terminal, generate a JWT signing secret:
+
+```powershell
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-Skip the copy if your `.env` already exists. The final command prints a JWT signing secret; it does not edit the environment file. Copy its complete output into `backend/.env`, then configure the database, OpenAI credentials, and seed password:
+The command prints the secret; it does not edit the environment file. Complete `backend/.env` using the environment-variable table below. In particular, set `FRONTEND_ORIGIN` to the exact Vite URL copied from the first terminal:
 
 ```dotenv
+FRONTEND_ORIGIN=http://127.0.0.1:5173
 JWT_SECRET=paste-the-generated-value-here
 SEED_PASSWORD=choose-a-demo-password-of-at-least-12-characters
 ```
 
 Keep `JWT_SECRET` stable between backend restarts. Replacing it invalidates existing session cookies, so all users must sign in again. `SEED_PASSWORD` must contain at least 12 characters and becomes the shared login password for the sample accounts.
 
-After saving `backend/.env`, initialize and start the backend in the first terminal:
+After saving `backend/.env`, initialize and start the backend in the second terminal:
 
 ```powershell
 cd backend
@@ -35,17 +46,7 @@ cd backend
 
 The seed command assigns this password to all three sample accounts and prints their login credentials when it finishes. If the accounts already exist, rerunning the command updates them to the current `SEED_PASSWORD` value.
 
-Install and start the frontend in a second terminal:
-
-```powershell
-cd frontend
-npm ci
-npm run dev -- --host 127.0.0.1
-```
-
-Open [QuickDesk](http://127.0.0.1:5173) and [API documentation](http://127.0.0.1:8000/docs).
-
-Vite is configured to use port `5173` and stop with a clear error if that port is already occupied. Stop the process using `5173` before starting another copy. If you intentionally use a different frontend port, set `FRONTEND_ORIGIN` in `backend/.env` to that exact origin and restart the backend.
+Open the Vite `Local` URL and [API documentation](http://127.0.0.1:8000/docs). If the frontend URL changes later, update `FRONTEND_ORIGIN` and restart the backend before signing in.
 
 | Seed account | Role |
 | --- | --- |
@@ -70,7 +71,7 @@ At backend startup, QuickDesk reads the six fictional Markdown articles, splits 
 | `EMBEDDING_MODEL` | OpenAI embedding model; default setup uses `text-embedding-3-small` |
 | `EMBEDDING_API_KEY` | OpenAI API key used for embeddings; it may be the same as `LLM_API_KEY` |
 | `RAG_MIN_SCORE` | Optional cosine-similarity threshold for retrieved chunks; default `0.35` |
-| `FRONTEND_ORIGIN` | `http://localhost:5173`; the same-port `127.0.0.1` alias is also accepted in development |
+| `FRONTEND_ORIGIN` | Exact `Local` URL printed by Vite; the same-port `localhost` and `127.0.0.1` aliases are both accepted in development |
 | `APP_ENV` | `development`; `production` enables Secure session cookies |
 
 Environment files, virtual environments, build output, and local credentials are ignored by Git. Never put API keys in frontend variables.

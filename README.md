@@ -37,6 +37,8 @@ Keep `JWT_SECRET` stable between backend restarts. Replacing it invalidates exis
 
 After saving `backend/.env`, initialize and start the backend in the second terminal:
 
+Before running the commands below, fill in all required values in `backend/.env`, including `FRONTEND_ORIGIN`, `DATABASE_URL`, `JWT_SECRET`, `SEED_PASSWORD`, and both OpenAI API-key fields.
+
 ```powershell
 cd backend
 .venv/Scripts/python.exe -m alembic upgrade head

@@ -12,6 +12,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core.config import Settings
 from app.db.session import Base, get_db
 from app.db.models import User, Draft, Ticket, LoginSession, now
 from app.core.security import hasher, COOKIE
@@ -21,6 +22,22 @@ from app.scripts import seed
 from app.api.routes.events import event_batch
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
+
+
+class SettingsTests(unittest.TestCase):
+    def test_frontend_origin_accepts_vite_url_with_trailing_slash(self):
+        configured = Settings(
+            _env_file=None,
+            app_env="development",
+            frontend_origin=" http://127.0.0.1:5174/ ",
+        )
+
+        self.assertEqual(configured.frontend_origin, "http://127.0.0.1:5174")
+        self.assertEqual(
+            configured.allowed_origins,
+            ["http://127.0.0.1:5174", "http://localhost:5174"],
+        )
+
 
 class CoreTests(unittest.TestCase):
     def setUp(self):

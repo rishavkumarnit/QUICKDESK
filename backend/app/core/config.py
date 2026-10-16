@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     rag_min_score: float = 0.35
     seed_password: str = ""
 
+    @field_validator("frontend_origin")
+    @classmethod
+    def normalize_frontend_origin(cls, value: str) -> str:
+        # Browsers omit the trailing slash from the Origin header, while Vite
+        # prints its local URL with one. Store the comparable origin form.
+        return value.strip().rstrip("/")
+
     @property
     def allowed_origins(self) -> list[str]:
         origins = [self.frontend_origin]
